@@ -1,9 +1,13 @@
 import { createProductCatalog } from '../messages/flexMenu.js';
 import { createQuotationFlex } from '../messages/quotationFlex.js';
+import { createVipCardFlex } from '../messages/vipFlex.js';
+import { createTrackingFlex } from '../messages/trackingFlex.js';
 import { askGemini, verifySlip, processAudio } from '../services/geminiService.js';
 
 // เก็บข้อมูลตะกร้าสินค้าของลูกค้าแต่ละคน (ใน Memory ชั่วคราวสำหรับโปรเจกต์)
 const userCarts = new Map();
+const userPoints = new Map();
+const userOrders = new Map();
 
 // Helper สำหรับแปลงข้อมูลจาก LINE เป็น Buffer (รองรับทั้ง Blob และ Stream)
 async function toBuffer(data) {
@@ -129,12 +133,23 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       const customerId = data.get('userId');
       if (userId !== 'U9113d402b5b45ffb3f45ec48ad14440a') return Promise.resolve(null);
       
+      const cart = userCarts.get(customerId);
+      if (cart) {
+        const currentData = userPoints.get(customerId) || { points: 0, tier: 'BRONZE' };
+        currentData.points += Math.floor(cart.total / 100);
+        if (currentData.points >= 50) currentData.tier = 'GOLD';
+        else if (currentData.points >= 20) currentData.tier = 'SILVER';
+        userPoints.set(customerId, currentData);
+      }
+      
       userCarts.delete(customerId); // Clear cart
 
       // แจ้งลูกค้า
       await client.pushMessage(customerId, {
-        type: 'text',
-        text: '✅ [การแจ้งเตือนจากระบบ]\nแอดมินตรวจสอบและยืนยันสลิปของคุณเรียบร้อยแล้ว!\n\nออเดอร์ของคุณกำลังถูกจัดเตรียม ขอบคุณที่ใช้บริการครับ 🚜'
+        messages: [{
+          type: 'text',
+          text: '✅ [การแจ้งเตือนจากระบบ]\nแอดมินตรวจสอบและยืนยันสลิปของคุณเรียบร้อยแล้ว!\nคุณได้รับแต้มสะสมเพิ่ม พิมพ์ "เช็คแต้ม" เพื่อดูสถานะ VIP ของคุณได้เลย\n\nออเดอร์ของคุณกำลังถูกจัดเตรียม ขอบคุณที่ใช้บริการครับ 🚜'
+        }]
       });
 
       // ตอบกลับแอดมิน
@@ -197,6 +212,28 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       });
     }
 
+    if (text === 'เช็คแต้ม') {
+      const data = userPoints.get(userId) || { points: 0, tier: 'BRONZE' };
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [createVipCardFlex(data.points, data.tier)]
+      });
+    }
+
+    if (text === 'ติดตามพัสดุ') {
+      const order = userOrders.get(userId);
+      if (!order || !order.trackingNo) {
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text: 'คุณยังไม่มีพัสดุที่กำลังจัดส่งในขณะนี้ครับ 🚜' }]
+        });
+      }
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [createTrackingFlex(order.trackingNo)]
+      });
+    }
+
     // Admin God Mode Commands
     if (userId === 'U9113d402b5b45ffb3f45ec48ad14440a' && text.startsWith('/')) {
       if (text === '/status') {
@@ -221,6 +258,31 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
             replyToken: event.replyToken,
             messages: [{ type: 'text', text: `❌ Broadcast Failed: ${err.message}` }]
           });
+        }
+      }
+      
+      if (text.startsWith('/ship ')) {
+        // format: /ship <userId> <trackingNo>
+        const parts = text.split(' ');
+        if (parts.length >= 3) {
+          const targetId = parts[1];
+          const trackingNo = parts.slice(2).join(' ');
+          userOrders.set(targetId, { trackingNo });
+          
+          try {
+            await client.pushMessage(targetId, {
+              messages: [createTrackingFlex(trackingNo)]
+            });
+            return client.replyMessage({
+              replyToken: event.replyToken,
+              messages: [{ type: 'text', text: `✅ อัปเดตสถานะจัดส่งให้ลูกค้าเรียบร้อยแล้ว!` }]
+            });
+          } catch (err) {
+            return client.replyMessage({
+              replyToken: event.replyToken,
+              messages: [{ type: 'text', text: `❌ ส่งแจ้งเตือนล้มเหลว: ${err.message}` }]
+            });
+          }
         }
       }
     }
@@ -333,7 +395,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
             spacing: 'md',
             contents: [
               { type: 'text', text: '🔔 รอตรวจสอบสลิป', weight: 'bold', size: 'xl', color: '#1DB446' },
-              { type: 'text', text: `มีลูกค้าส่งรูปสลิปเข้ามา\nยอดรวมที่ต้องชำระ: ${cart.total} บาท`, wrap: true },
+              { type: 'text', text: `ยอดรวมที่ต้องชำระ: ${cart.total} บาท\nรหัสลูกค้า: ${userId}`, wrap: true },
               { type: 'text', text: 'รบกวนแอดมินดูรูปสลิปที่ลูกค้าส่งมา แล้วกดยืนยันด้านล่างนี้ครับ', size: 'sm', color: '#888888', wrap: true }
             ]
           },
