@@ -8,6 +8,7 @@ import { askGemini, verifySlip, processAudio } from '../services/geminiService.j
 const userCarts = new Map();
 const userPoints = new Map();
 const userOrders = new Map();
+let adminId = 'U9113d402b5b45ffb3f45ec48ad14440a'; // Default Admin ID
 
 // Helper สำหรับแปลงข้อมูลจาก LINE เป็น Buffer (รองรับทั้ง Blob และ Stream)
 async function toBuffer(data) {
@@ -131,7 +132,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
 
     if (action === 'approve_slip') {
       const customerId = data.get('userId');
-      if (userId !== 'U9113d402b5b45ffb3f45ec48ad14440a') return Promise.resolve(null);
+      if (userId !== adminId) return Promise.resolve(null);
       
       const cart = userCarts.get(customerId);
       if (cart) {
@@ -161,7 +162,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
 
     if (action === 'reject_slip') {
       const customerId = data.get('userId');
-      if (userId !== 'U9113d402b5b45ffb3f45ec48ad14440a') return Promise.resolve(null);
+      if (userId !== adminId) return Promise.resolve(null);
       
       // แจ้งลูกค้า
       await client.pushMessage(customerId, {
@@ -235,7 +236,15 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
     }
 
     // Admin God Mode Commands
-    if (userId === 'U9113d402b5b45ffb3f45ec48ad14440a' && text.startsWith('/')) {
+    if (text === '/admin') {
+      adminId = userId;
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [{ type: 'text', text: `👑 [SYSTEM] ตั้งค่าบัญชีของคุณเป็น ADMIN เรียบร้อยแล้ว! (ID: ${userId})\n\nคุณจะได้รับการแจ้งเตือนสลิปโอนเงินทั้งหมดนับจากนี้ครับ` }]
+      });
+    }
+
+    if (userId === adminId && text.startsWith('/')) {
       if (text === '/status') {
         const activeUsers = userCarts.size;
         return client.replyMessage({
@@ -384,7 +393,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       });
 
       // 2. ส่ง Push Notification แจ้งเตือนแอดมิน (God Mode)
-      await client.pushMessage('U9113d402b5b45ffb3f45ec48ad14440a', {
+      await client.pushMessage(adminId, {
         type: 'flex',
         altText: '🔔 มีลูกค้าแจ้งโอนเงิน (รอตรวจสอบ)',
         contents: {
