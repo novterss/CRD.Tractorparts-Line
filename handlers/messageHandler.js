@@ -266,7 +266,12 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
     }
 
     // Admin God Mode Commands
-    if (text === '/admin') {
+    if (text.startsWith('/admin')) {
+      const parts = text.split(' ');
+      if (parts[1] !== 'fatmonkey') {
+        return Promise.resolve(null); // Ignore if password is wrong or missing (so it doesn't alert the user)
+      }
+      
       setAdminId(userId);
       return client.replyMessage({
         replyToken: event.replyToken,
