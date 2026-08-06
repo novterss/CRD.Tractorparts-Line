@@ -6,6 +6,8 @@ import { askGemini, processAudio } from '../services/geminiService.js';
 import { userCarts, userPoints, userOrders, pendingSlips, adminId, setAdminId } from '../store.js';
 import fs from 'fs';
 import path from 'path';
+import generatePayload from 'promptpay-qr';
+import qrcode from 'qrcode';
 
 // Helper สำหรับแปลงข้อมูลจาก LINE เป็น Buffer (รองรับทั้ง Blob และ Stream)
 async function toBuffer(data) {
@@ -303,15 +305,46 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       }
 
       const summary = cart.items.map((it, idx) => `${idx + 1}. ${it}`).join('\n');
-      return client.replyMessage({
-        replyToken: event.replyToken,
-        messages: [
-          {
-            type: 'text',
-            text: `📝 สรุปรายการสั่งซื้อ:\n${summary}\n\n💰 ยอดชำระทั้งหมด: ${cart.total} บาท\n\n🏦 ธนาคารกสิกรไทย\nเลขที่บัญชี: 123-4-56789-0\nชื่อบัญชี: บจก. CRD Tractor Parts\n\n📸 **เมื่อโอนเงินแล้ว กรุณาส่งรูปสลิปเข้ามาในแชทนี้ได้เลยครับ ระบบ AI ของเราจะทำการตรวจสอบทันที!**`
-          }
-        ]
-      });
+      
+      try {
+        // สร้าง QR Code พร้อมเพย์
+        const mobileNumber = '0974749944'; // เบอร์พร้อมเพย์ร้านค้า
+        const payload = generatePayload(mobileNumber, { amount: cart.total });
+        const qrFilename = `qr_${userId}_${Date.now()}.png`;
+        const qrPath = path.join(process.cwd(), 'public', 'uploads', qrFilename);
+        
+        await qrcode.toFile(qrPath, payload, { 
+          color: { dark: '#000000', light: '#ffffff' },
+          width: 500
+        });
+        
+        const qrUrl = `${baseUrl}/uploads/${qrFilename}`;
+
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [
+            {
+              type: 'text',
+              text: `📝 สรุปรายการสั่งซื้อ:\n${summary}\n\n💰 ยอดชำระทั้งหมด: ${cart.total} บาท\n\n💳 สแกนจ่ายผ่าน QR Code พร้อมเพย์ด้านล่างนี้ได้เลยครับ 👇`
+            },
+            {
+              type: 'image',
+              originalContentUrl: qrUrl,
+              previewImageUrl: qrUrl
+            },
+            {
+              type: 'text',
+              text: `📸 **เมื่อโอนเงินแล้ว กรุณาส่งรูปสลิปเข้ามาในแชทนี้ได้เลยครับ!**`
+            }
+          ]
+        });
+      } catch (err) {
+        console.error('QR Gen Error:', err);
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text: 'เกิดข้อผิดพลาดในการสร้าง QR Code กรุณาโอนเงินเข้าบัญชีกสิกรไทย 123-4-56789-0 แทนครับ' }]
+        });
+      }
     }
 
     if (text === 'ช่วยเหลือ') {
