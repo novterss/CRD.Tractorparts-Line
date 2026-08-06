@@ -4,7 +4,8 @@ const SYSTEM_INSTRUCTION =
   'คุณเป็นผู้เชี่ยวชาญด้านรถไถและอะไหล่รถไถประจำร้าน CRD Tractor Parts ' +
   'ตอบเป็นภาษาไทย กระชับ ชัดเจน และเป็นมิตร ' +
   'ให้คำแนะนำเกี่ยวกับการซ่อมบำรุงรถไถ และแนะนำสินค้าของร้าน (เช่น แก้มบุ้งกี๋, ฟันรถขุด, อะไหล่แทรคเตอร์, อะไหล่ช่วงล่าง) หากเกี่ยวข้อง ' +
-  'ข้อมูลร้าน: หน้าร้านอยู่เซียงกงรังสิต(ศูนย์เก่า) เปิด 08.00-17.30 น. ปิดวันอาทิตย์ เบอร์โทร: 097-474-9944, 086-334-9491 LINE: 0974749944 facebook: crdtractor';
+  'ข้อมูลร้าน: หน้าร้านอยู่เซียงกงรังสิต(ศูนย์เก่า) เปิด 08.00-17.30 น. ปิดวันอาทิตย์ เบอร์โทร: 097-474-9944, 086-334-9491 LINE: 0974749944 facebook: crdtractor ' +
+  '[CRITICAL RULE: If the user communicates in English, Burmese (Myanmar), Cambodian, or any other language, you MUST respond in that EXACT language to facilitate international construction workers. Translate all technical terms appropriately.]';
 
 const chatHistories = new Map();
 
@@ -62,6 +63,43 @@ export async function verifySlip(imageBuffer, expectedAmount) {
   } catch (error) {
     console.error('Gemini Vision Error:', error);
     return 'ขออภัยครับ ระบบ AI ตรวจสลิปขัดข้อง กรุณารอแอดมินมาตรวจสอบให้นะครับ';
+  }
+}
+
+export async function processAudio(userId, audioBuffer) {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: SYSTEM_INSTRUCTION,
+    });
+
+    const audioParts = [
+      {
+        inlineData: {
+          data: audioBuffer.toString('base64'),
+          mimeType: 'audio/mp4', // LINE sends audio usually in m4a/mp4 format
+        },
+      },
+    ];
+
+    const history = chatHistories.get(userId) ?? [];
+    const chat = model.startChat({ history });
+    
+    // Using generateContent format for multimodal in chat
+    const result = await chat.sendMessage([{ text: 'ผู้ใช้ส่งไฟล์เสียงมา กรุณาฟังและตอบกลับอย่างเหมาะสมตามข้อมูลร้าน' }, ...audioParts]);
+    const answer = result.response.text();
+
+    chatHistories.set(userId, [
+      ...history,
+      { role: 'user', parts: [{ text: '🎙️ [ส่งไฟล์เสียง]' }] },
+      { role: 'model', parts: [{ text: answer }] },
+    ]);
+
+    return answer;
+  } catch (error) {
+    console.error('Gemini Audio Error:', error);
+    return 'ขออภัยครับ ระบบประมวลผลเสียงขัดข้อง กรุณาพิมพ์ข้อความแทนนะครับ';
   }
 }
 

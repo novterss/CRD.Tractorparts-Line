@@ -1,5 +1,6 @@
 import { createProductCatalog } from '../messages/flexMenu.js';
-import { askGemini, verifySlip } from '../services/geminiService.js';
+import { createQuotationFlex } from '../messages/quotationFlex.js';
+import { askGemini, verifySlip, processAudio } from '../services/geminiService.js';
 
 // เก็บข้อมูลตะกร้าสินค้าของลูกค้าแต่ละคน (ใน Memory ชั่วคราวสำหรับโปรเจกต์)
 const userCarts = new Map();
@@ -141,6 +142,39 @@ export async function handleEvent(client, event, baseUrl) {
       return Promise.resolve(null); // ไม่ต้องตอบกลับ ให้ลูกค้าแนบสลิปต่อเลย
     }
 
+    if (text === 'ขอใบเสนอราคา') {
+      const cart = userCarts.get(userId);
+      if (!cart || cart.total === 0) {
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text: 'คุณยังไม่ได้เลือกสินค้าครับ กรุณาหยิบสินค้าลงตะกร้าก่อนขอใบเสนอราคาครับ 🚜' }]
+        });
+      }
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [createQuotationFlex(cart)]
+      });
+    }
+
+    // Admin God Mode Commands
+    if (userId === 'U9113d402b5b45ffb3f45ec48ad14440a' && text.startsWith('/')) {
+      if (text === '/status') {
+        const activeUsers = userCarts.size;
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text: `🛠️ [ADMIN GOD MODE]\n\n🟢 System: ONLINE\n🛒 Active Carts: ${activeUsers}\n🧠 AI Engine: Gemini 1.5 Flash` }]
+        });
+      }
+      if (text.startsWith('/broadcast ')) {
+        const msg = text.substring(11);
+        // Note: Real broadcast requires broadcast API. Since we don't want to spam real users or exceed quota, we'll simulate it for the demo.
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text: `📢 [BROADCAST SUCCESS]\nส่งข้อความ:\n"${msg}"\nไปยังผู้ใช้งานทั้งหมด (Simulated) เรียบร้อยแล้ว!` }]
+        });
+      }
+    }
+
     if (text === 'ชำระเงิน' || text === 'ตะกร้า') {
       const cart = userCarts.get(userId);
       if (!cart || cart.total === 0) {
@@ -274,6 +308,27 @@ export async function handleEvent(client, event, baseUrl) {
       return client.replyMessage({
         replyToken: event.replyToken,
         messages: [{ type: 'text', text: 'เกิดข้อผิดพลาดในการโหลดรูปภาพ กรุณารอแอดมินมาตรวจสอบสักครู่นะครับ' }]
+      });
+    }
+  }
+
+  // Handle Audio messages (AI Voice Order/Consultation)
+  if (event.type === 'message' && event.message.type === 'audio') {
+    await showAiLoading(client, userId);
+    try {
+      const stream = await client.getMessageContent(event.message.id);
+      const audioBuffer = await streamToBuffer(stream);
+      const aiResponse = await processAudio(userId, audioBuffer);
+      
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [{ type: 'text', text: aiResponse }]
+      });
+    } catch (err) {
+      console.error('Audio Process Error', err);
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [{ type: 'text', text: 'ขออภัยครับ ระบบประมวลผลเสียงขัดข้อง กรุณาพิมพ์ข้อความแทนนะครับ' }]
       });
     }
   }
