@@ -310,8 +310,14 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
         // สร้าง QR Code พร้อมเพย์
         const mobileNumber = '0627905333'; // เบอร์พร้อมเพย์ร้านค้า
         const payload = generatePayload(mobileNumber, { amount: cart.total });
+        
+        const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
         const qrFilename = `qr_${userId}_${Date.now()}.png`;
-        const qrPath = path.join(process.cwd(), 'public', 'uploads', qrFilename);
+        const qrPath = path.join(uploadsDir, qrFilename);
         
         await qrcode.toFile(qrPath, payload, { 
           color: { dark: '#000000', light: '#ffffff' },
