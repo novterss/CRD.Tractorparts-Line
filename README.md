@@ -7,8 +7,11 @@ This repository contains the source code for the **CRD Tractor Parts** LINE Offi
 - **Automated Welcome & Quick Replies:** Instantly greets new followers with a professional message and provides quick action buttons to navigate the bot's features easily.
 - **Interactive Flex Message Catalog:** Displays a beautifully structured carousel of tractor parts and products, complete with images, pricing, and descriptions. Users can click "View Details" to receive more information via Postback actions.
 - **Context-Aware AI Assistant (Gemini):** Integrated with Google's Gemini Flash model to serve as a virtual mechanic and sales representative. The AI is specifically prompted with the store's information (hours, location, contact) and can answer technical queries, maintaining conversation history (Context Memory) for a natural chat flow.
+- **Spectacular E-Commerce UI (LIFF):** Integrated with LINE Front-end Framework (LIFF) to provide a stunning, dark-themed, glassmorphism product catalog. Users can browse products in a premium full-screen web app.
+- **Floating Cart & Chat Checkout:** Users can add products to their cart either via Flex Messages or the LIFF App. When checking out, the bot automatically tallies the total price and generates a summary invoice directly in the chat.
+- **AI Slip Verification (Gemini Vision):** Revolutionary checkout process! Instead of manual verification, users upload a picture of their bank transfer slip. The bot utilizes Gemini's multimodal capabilities (Gemini 1.5 Flash) to "read" the numbers on the slip and instantly verify if the transferred amount matches the cart total.
+- **Admin Push Notifications:** The moment an order is placed and the slip is verified by the AI, the bot uses the Push Message API to instantly alert the store owner/admin with the order details and user ID.
 - **Hybrid Human-Bot Handoff:** Engineered with a seamless fallback mechanism. If a user types a standard conversational message, the bot remains silent, allowing human administrators to jump in and reply via the LINE Official Account Manager without any disruptive auto-replies.
-- **Keyword Routing:** Supports essential keywords to trigger specific actions (e.g., retrieving contact info and location maps).
 
 ## Tech Stack
 
