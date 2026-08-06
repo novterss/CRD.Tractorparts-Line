@@ -270,7 +270,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       setAdminId(userId);
       return client.replyMessage({
         replyToken: event.replyToken,
-        messages: [{ type: 'text', text: `👑 [SYSTEM] ตั้งค่าบัญชีของคุณเป็น ADMIN เรียบร้อยแล้ว! (ID: ${userId})\n\nคุณจะได้รับการแจ้งเตือนสลิปโอนเงินทั้งหมดนับจากนี้ครับ` }]
+        messages: [{ type: 'text', text: `👑 [SYSTEM] ตั้งค่าบัญชีของคุณเป็น ADMIN เรียบร้อยแล้ว! (ID: ${userId})\n\nคุณจะได้รับการแจ้งเตือนสลิปโอนเงินทั้งหมดนับจากนี้ครับ\n\n💻 เข้าสู่ระบบหลังบ้าน (Admin Dashboard):\n${baseUrl}/admin.html\n(PIN: fatmonkey)` }]
       });
     }
 
