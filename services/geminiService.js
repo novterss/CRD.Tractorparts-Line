@@ -39,7 +39,7 @@ export async function verifySlip(imageBuffer, expectedAmount) {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     // Use the latest flash model which supports multimodality (vision)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
     const prompt = `คุณคือ AI ตรวจสอบสลิปโอนเงินของร้าน CRD Tractor Parts
 ลูกค้าต้องโอนเงินจำนวน ${expectedAmount} บาท
@@ -70,7 +70,7 @@ export async function processAudio(userId, audioBuffer) {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-latest',
       systemInstruction: SYSTEM_INSTRUCTION,
     });
 
