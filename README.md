@@ -5,7 +5,7 @@
 ![LINE Messaging API](https://img.shields.io/badge/LINE_Messaging_API-00C300?style=for-the-badge&logo=LINE&logoColor=white)
 ![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=Google&logoColor=white)
 
-This repository contains the source code for the **CRD Tractor Parts** LINE Official Account bot. Built for the modern e-commerce era, this project takes a **"Zero-Admin"** approach. It replaces traditional manual admin dashboards with cutting-edge **Multimodal AI (Gemini 1.5 Flash)** to fully automate customer service, technical support, and payment verification.
+This repository contains the source code for the **CRD Tractor Parts** LINE Official Account bot. Built for the modern e-commerce era, this project combines **AI-powered customer service** with a robust **Omnichannel Admin Dashboard** to create a seamless end-to-end shopping experience—from product inquiry to checkout, payment verification, and logistics tracking.
 
 > 📚 **Detailed Documentation**
 > - 🇹🇭 [สถาปัตยกรรมระบบ (System Architecture - TH) ](./docs/THAI/SYSTEM_ARCHITECTURE.md)
@@ -15,11 +15,12 @@ This repository contains the source code for the **CRD Tractor Parts** LINE Offi
 
 ## 🌟 Key Features (ฟีเจอร์หลัก)
 
-- **Customer Catalog (LIFF):** ลูกค้าสามารถเปิดหน้าแคตตาล็อกผ่าน LIFF Web App (Premium Dark Theme) เลือกสินค้าลงตะกร้า และส่งรายการสรุปออเดอร์ (Checkout) เข้าไปในแชท LINE ได้ทันที 
-- **AI Slip Verification (Vision OCR):** ล้ำหน้ากว่าระบบ E-commerce ทั่วไป! เมื่อลูกค้าส่งรูปสลิปโอนเงิน ระบบจะดึงภาพส่งให้ AI อ่านตัวเลขและตรวจสอบยอดเงินอัตโนมัติ หากยอดตรง ระบบจะปิดการขายทันทีโดยไม่ต้องพึ่งพาแอดมินมนุษย์ (Zero-Admin Validation)
-- **Admin Push Notification:** เมื่อ AI อนุมัติสลิปโอนเงินเสร็จสิ้น ระบบจะยิง Push Message ไปยังแชทของแอดมินแบบเรียลไทม์ พร้อมแจ้งยอดและ ID ลูกค้า
-- **Context-Aware AI Mechanic:** บอทเชื่อมต่อกับ Gemini 1.5 Flash ทำหน้าที่เป็นช่างเทคนิคที่จำบริบทการสนทนาได้ (Context Memory) สามารถตอบปัญหาเครื่องจักรได้อย่างเป็นธรรมชาติ
-- **Hybrid Human-Bot Handoff:** ระบบมีฟังก์ชัน "Stand Down" หากลูกค้าไม่ได้พิมพ์คีย์เวิร์ดสั่งซื้อหรือตั้งคำถาม บอทจะเงียบเพื่อให้แอดมินตัวจริงสามารถเข้ามาคุยต่อได้โดยไม่เกิดการชนกัน (Collision)
+- **Customer Catalog (LIFF):** ลูกค้าสามารถเปิดหน้าแคตตาล็อกผ่าน LIFF Web App เลือกสินค้าลงตะกร้า และส่งรายการสรุปออเดอร์เข้าแชท LINE ได้ทันที
+- **Dynamic PromptPay QR Code:** เมื่อลูกค้ากดสั่งซื้อหรือขอชำระเงิน บอทจะคำนวณยอดรวมและสร้างรูปภาพ QR Code พร้อมเพย์ที่ฝังยอดเงินเป๊ะๆ ส่งกลับให้ลูกค้าสแกนจ่ายได้ทันที (ลดความผิดพลาดในการโอนเงิน)
+- **Omnichannel Admin Dashboard (Web + LINE):** ระบบจัดการร้านค้า 2 ช่องทาง! แอดมินสามารถกดยืนยันสลิปผ่านทาง LINE แชทได้ทันทีเมื่ออยู่ข้างนอก (God Mode) หรือล็อกอินผ่านเว็บไซต์หลังบ้าน (PIN Protection) เพื่อตรวจสอบสลิปและกรอกเลขพัสดุได้อย่างเป็นระบบ
+- **Automated CRM & VIP System:** เมื่อแอดมินกด "อนุมัติสลิป" ลูกค้าจะได้รับแต้มสะสมโดยอัตโนมัติ (100 บาท = 1 แต้ม) และสามารถเช็คสถานะ VIP (BRONZE, SILVER, GOLD) ผ่านรูปแบบการ์ดสะสมแต้ม (Flex Message) สุดพรีเมียม
+- **Smart Logistics Tracking:** แอดมินสามารถส่งเลขพัสดุให้ลูกค้าผ่านระบบหลังบ้าน ลูกค้าจะได้รับการ์ดสถานะจัดส่ง พร้อมปุ่มกดลิงก์เช็คสถานะกับ KEX (Kerry Express) แบบเรียลไทม์
+- **AI Mechanic Consultant:** บอทเชื่อมต่อกับ Gemini 1.5 Flash ทำหน้าที่เป็นช่างเทคนิคที่คอยให้คำปรึกษาปัญหาเครื่องจักรเบื้องต้นได้อย่างชาญฉลาด
 
 ## 🛠 Tech Stack & Infrastructure
 
