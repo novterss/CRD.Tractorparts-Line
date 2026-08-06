@@ -60,7 +60,7 @@ export function createTrackingFlex(trackingNo) {
             action: {
               type: 'uri',
               label: 'เช็คพัสดุ Kerry',
-              uri: `https://th.kerryexpress.com/th/track/?track=${trackingNo}`
+              uri: `https://th.kex-express.com/th/track/?track=${trackingNo}`
             }
           }
         ]
