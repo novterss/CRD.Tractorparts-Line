@@ -172,11 +172,20 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       }
       if (text.startsWith('/broadcast ')) {
         const msg = text.substring(11);
-        // Note: Real broadcast requires broadcast API. Since we don't want to spam real users or exceed quota, we'll simulate it for the demo.
-        return client.replyMessage({
-          replyToken: event.replyToken,
-          messages: [{ type: 'text', text: `📢 [BROADCAST SUCCESS]\nส่งข้อความ:\n"${msg}"\nไปยังผู้ใช้งานทั้งหมด (Simulated) เรียบร้อยแล้ว!` }]
-        });
+        try {
+          await client.broadcast({
+            messages: [{ type: 'text', text: `📢 ประกาศจากร้านค้า:\n\n${msg}` }]
+          });
+          return client.replyMessage({
+            replyToken: event.replyToken,
+            messages: [{ type: 'text', text: `📢 [BROADCAST SUCCESS]\nส่งข้อความ:\n"${msg}"\nไปยังผู้ใช้งานทุกคนจริงๆ เรียบร้อยแล้ว!` }]
+          });
+        } catch (err) {
+          return client.replyMessage({
+            replyToken: event.replyToken,
+            messages: [{ type: 'text', text: `❌ Broadcast Failed: ${err.message}` }]
+          });
+        }
       }
     }
 

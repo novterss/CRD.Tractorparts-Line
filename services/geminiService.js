@@ -62,7 +62,7 @@ export async function verifySlip(imageBuffer, expectedAmount) {
     return result.response.text();
   } catch (error) {
     console.error('Gemini Vision Error:', error);
-    return 'ขออภัยครับ ระบบ AI ตรวจสลิปขัดข้อง กรุณารอแอดมินมาตรวจสอบให้นะครับ';
+    return `ขออภัยครับ ระบบ AI ตรวจสลิปขัดข้อง: ${error.message || String(error)}`;
   }
 }
 
@@ -99,7 +99,7 @@ export async function processAudio(userId, audioBuffer) {
     return answer;
   } catch (error) {
     console.error('Gemini Audio Error:', error);
-    return 'ขออภัยครับ ระบบประมวลผลเสียงขัดข้อง กรุณาพิมพ์ข้อความแทนนะครับ';
+    return `ขออภัยครับ ระบบประมวลผลเสียงขัดข้อง: ${error.message || String(error)}`;
   }
 }
 
