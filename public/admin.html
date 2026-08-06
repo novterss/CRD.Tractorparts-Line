@@ -101,7 +101,7 @@
           fetchPendingSlips();
         });
       } else {
-        liff.login();
+        liff.login({ redirectUri: window.location.href });
       }
     }).catch(err => {
       document.getElementById('loginStatus').innerText = 'LIFF Init Error: ' + err.message;
