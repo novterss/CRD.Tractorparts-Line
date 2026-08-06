@@ -305,9 +305,9 @@
       if (cart.length === 0) return;
 
       const total = cart.reduce((sum, p) => sum + p.price, 0);
-      const summary = cart.map((p, i) => `${i+1}. ${p.name}`).join('\\n');
+      const summary = cart.map((p, i) => `${i+1}. ${p.name}`).join('\n');
       
-      const message = `🛒 บันทึกคำสั่งซื้อจาก LIFF\\n\\n${summary}\\n\\n💰 ยอดรวม: ${total} บาท\\nกรุณาโอนเงินแล้วส่งสลิปในแชทนี้ได้เลยครับ`;
+      const message = `🛒 บันทึกคำสั่งซื้อจาก LIFF\n\n${summary}\n\n💰 ยอดรวม: ${total} บาท\nกรุณาโอนเงินแล้วส่งสลิปในแชทนี้ได้เลยครับ`;
 
       try {
         if (liff.isInClient()) {

@@ -131,6 +131,16 @@ export async function handleEvent(client, event, baseUrl) {
       });
     }
 
+    // เมื่อลูกค้ากดชำระเงินจาก LIFF ระบบจะส่งข้อความเข้าแชท เราจะจับข้อความนี้เพื่อสร้างตะกร้ารอตรวจสลิป
+    if (text.startsWith('🛒 บันทึกคำสั่งซื้อจาก LIFF')) {
+      const match = text.match(/ยอดรวม:\s*(\d+)/);
+      if (match) {
+        const total = parseInt(match[1], 10);
+        userCarts.set(userId, { total, items: [] });
+      }
+      return Promise.resolve(null); // ไม่ต้องตอบกลับ ให้ลูกค้าแนบสลิปต่อเลย
+    }
+
     if (text === 'ชำระเงิน' || text === 'ตะกร้า') {
       const cart = userCarts.get(userId);
       if (!cart || cart.total === 0) {
