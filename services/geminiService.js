@@ -33,3 +33,35 @@ export async function askGemini(userId, userMessage) {
     return 'ขออภัยครับ ตอนนี้ระบบ AI ของเรามีปัญหาเล็กน้อย กรุณาลองใหม่อีกครั้งหรือติดต่อพนักงานได้เลยครับ';
   }
 }
+
+export async function verifySlip(imageBuffer, expectedAmount) {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    // Use the latest flash model which supports multimodality (vision)
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `คุณคือ AI ตรวจสอบสลิปโอนเงินของร้าน CRD Tractor Parts
+ลูกค้าต้องโอนเงินจำนวน ${expectedAmount} บาท
+กรุณาดูรูปนี้และบอกว่า:
+1. เป็นสลิปโอนเงินธนาคารของไทยใช่หรือไม่?
+2. ยอดเงินโอนตรงกับ ${expectedAmount} บาท หรือไม่?
+ถ้าตรง ให้ตอบว่า "✅ ยืนยันการชำระเงินเรียบร้อย! (ระบบ AI ตรวจสอบยอด ${expectedAmount} บาทถูกต้อง)"
+ถ้าไม่ตรง ให้ตอบว่า "❌ ยอดเงินไม่ถูกต้อง หรือไม่ใช่สลิปโอนเงิน กรุณาตรวจสอบอีกครั้ง"`;
+
+    const imageParts = [
+      {
+        inlineData: {
+          data: imageBuffer.toString('base64'),
+          mimeType: 'image/jpeg',
+        },
+      },
+    ];
+
+    const result = await model.generateContent([prompt, ...imageParts]);
+    return result.response.text();
+  } catch (error) {
+    console.error('Gemini Vision Error:', error);
+    return 'ขออภัยครับ ระบบ AI ตรวจสลิปขัดข้อง กรุณารอแอดมินมาตรวจสอบให้นะครับ';
+  }
+}
+

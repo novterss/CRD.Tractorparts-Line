@@ -1,5 +1,17 @@
 import { createProductCatalog } from '../messages/flexMenu.js';
-import { askGemini } from '../services/geminiService.js';
+import { askGemini, verifySlip } from '../services/geminiService.js';
+
+// เก็บข้อมูลตะกร้าสินค้าของลูกค้าแต่ละคน (ใน Memory ชั่วคราวสำหรับโปรเจกต์)
+const userCarts = new Map();
+
+// Helper สำหรับแปลง Stream รูปภาพจาก LINE เป็น Buffer
+async function streamToBuffer(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
 
 async function showAiLoading(client, userId) {
   if (!userId || userId === 'anonymous') return;
@@ -78,6 +90,26 @@ export async function handleEvent(client, event, baseUrl) {
         messages: [{ type: 'text', text: detailText }]
       });
     }
+
+    if (action === 'buy') {
+      const price = parseInt(data.get('price'), 10);
+      const itemName = item === 'oil' ? 'น้ำมันเครื่องเกรดพรีเมียม' : 'ชุดลูกกลิ้งและแทร็ก';
+      
+      const cart = userCarts.get(userId) || { total: 0, items: [] };
+      cart.items.push(itemName);
+      cart.total += price;
+      userCarts.set(userId, cart);
+
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [
+          { 
+            type: 'text', 
+            text: `🛒 เพิ่ม "${itemName}" ลงตะกร้าแล้ว!\nยอดรวมตอนนี้: ${cart.total} บาท\n\nพิมพ์ "ชำระเงิน" เพื่อดูสรุปยอดและโอนเงินครับ` 
+          }
+        ]
+      });
+    }
   }
 
   // Handle text messages
@@ -88,6 +120,27 @@ export async function handleEvent(client, event, baseUrl) {
       return client.replyMessage({
         replyToken: event.replyToken,
         messages: [createProductCatalog(baseUrl)]
+      });
+    }
+
+    if (text === 'ชำระเงิน' || text === 'ตะกร้า') {
+      const cart = userCarts.get(userId);
+      if (!cart || cart.total === 0) {
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text: 'ตะกร้าสินค้าของคุณยังว่างเปล่าครับ พิมพ์ "เมนู" เพื่อเลือกซื้อสินค้าได้เลยครับ 🚜' }]
+        });
+      }
+
+      const summary = cart.items.map((it, idx) => `${idx + 1}. ${it}`).join('\n');
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [
+          {
+            type: 'text',
+            text: `📝 สรุปรายการสั่งซื้อ:\n${summary}\n\n💰 ยอดชำระทั้งหมด: ${cart.total} บาท\n\n🏦 ธนาคารกสิกรไทย\nเลขที่บัญชี: 123-4-56789-0\nชื่อบัญชี: บจก. CRD Tractor Parts\n\n📸 **เมื่อโอนเงินแล้ว กรุณาส่งรูปสลิปเข้ามาในแชทนี้ได้เลยครับ ระบบ AI ของเราจะทำการตรวจสอบทันที!**`
+          }
+        ]
       });
     }
 
@@ -136,6 +189,63 @@ export async function handleEvent(client, event, baseUrl) {
     // If it doesn't match any command and doesn't start with "ถาม", do nothing.
     // This allows the human admin to jump in and chat with the customer seamlessly.
     return Promise.resolve(null);
+  }
+
+  // Handle Image messages (Slip Verification)
+  if (event.type === 'message' && event.message.type === 'image') {
+    const cart = userCarts.get(userId);
+    
+    // ถ้าไม่มีตะกร้า ก็ไม่ต้องตรวจ ปล่อยผ่านให้คนตอบ
+    if (!cart || cart.total === 0) {
+      return Promise.resolve(null);
+    }
+
+    await showAiLoading(client, userId);
+    
+    try {
+      // 1. ดึงภาพจาก LINE
+      const stream = await client.getMessageContent(event.message.id);
+      const imageBuffer = await streamToBuffer(stream);
+
+      // 2. ส่งให้ Gemini Vision ตรวจ
+      const aiResponse = await verifySlip(imageBuffer, cart.total);
+
+      // 3. เคลียร์ตะกร้าถ้าสำเร็จ (เช็คคำว่า ยืนยัน)
+      if (aiResponse.includes('✅')) {
+        userCarts.delete(userId);
+        
+        // ส่ง Push Notification แจ้งเตือนแอดมินทันทีที่มีออเดอร์ใหม่และโอนเงินแล้ว
+        try {
+          await client.pushMessage('U9113d402b5b45ffb3f45ec48ad14440a', {
+            type: 'text',
+            text: `🔔 มีออเดอร์ใหม่และชำระเงินเรียบร้อยแล้ว!\nยอดรวม: ${cart.total} บาท\nจากลูกค้า ID: ${userId}`
+          });
+        } catch (pushErr) {
+          console.error('Failed to notify admin', pushErr);
+        }
+
+        // แจ้งเตือนลูกค้า
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [
+            { type: 'text', text: aiResponse },
+            { type: 'text', text: '🔔 แอดมินได้รับแจ้งเตือนออเดอร์ของคุณเรียบร้อยแล้ว เราจะรีบจัดส่งให้เร็วที่สุดครับ ขอบคุณที่ใช้บริการ CRD Tractor Parts 🚜' }
+          ]
+        });
+      } else {
+        return client.replyMessage({
+          replyToken: event.replyToken,
+          messages: [{ type: 'text', text: aiResponse }]
+        });
+      }
+
+    } catch (err) {
+      console.error('Slip Verify Error', err);
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [{ type: 'text', text: 'เกิดข้อผิดพลาดในการโหลดรูปภาพ กรุณารอแอดมินมาตรวจสอบสักครู่นะครับ' }]
+      });
+    }
   }
 
   return null;

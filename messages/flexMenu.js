@@ -57,6 +57,15 @@ export function createProductCatalog(baseUrl = '') {
                   label: 'ดูรายละเอียด',
                   data: 'action=detail&item=oil'
                 }
+              },
+              {
+                type: 'button',
+                style: 'secondary',
+                action: {
+                  type: 'postback',
+                  label: '🛒 หยิบใส่ตะกร้า',
+                  data: 'action=buy&item=oil&price=1200'
+                }
               }
             ]
           }
@@ -109,6 +118,15 @@ export function createProductCatalog(baseUrl = '') {
                   type: 'postback',
                   label: 'ดูรายละเอียด',
                   data: 'action=detail&item=filter'
+                }
+              },
+              {
+                type: 'button',
+                style: 'secondary',
+                action: {
+                  type: 'postback',
+                  label: '🛒 หยิบใส่ตะกร้า',
+                  data: 'action=buy&item=filter&price=850'
                 }
               }
             ]
