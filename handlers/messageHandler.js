@@ -124,6 +124,42 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
         ]
       });
     }
+
+    if (action === 'approve_slip') {
+      const customerId = data.get('userId');
+      if (userId !== 'U9113d402b5b45ffb3f45ec48ad14440a') return Promise.resolve(null);
+      
+      userCarts.delete(customerId); // Clear cart
+
+      // แจ้งลูกค้า
+      await client.pushMessage(customerId, {
+        type: 'text',
+        text: '✅ [การแจ้งเตือนจากระบบ]\nแอดมินตรวจสอบและยืนยันสลิปของคุณเรียบร้อยแล้ว!\n\nออเดอร์ของคุณกำลังถูกจัดเตรียม ขอบคุณที่ใช้บริการครับ 🚜'
+      });
+
+      // ตอบกลับแอดมิน
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [{ type: 'text', text: `✅ อนุมัติสลิปของลูกค้าสำเร็จแล้ว` }]
+      });
+    }
+
+    if (action === 'reject_slip') {
+      const customerId = data.get('userId');
+      if (userId !== 'U9113d402b5b45ffb3f45ec48ad14440a') return Promise.resolve(null);
+      
+      // แจ้งลูกค้า
+      await client.pushMessage(customerId, {
+        type: 'text',
+        text: '❌ [การแจ้งเตือนจากระบบ]\nสลิปของคุณไม่ถูกต้อง หรือยอดเงินไม่ตรงตามที่กำหนด\n\nกรุณาตรวจสอบและส่งรูปสลิปเข้ามาใหม่อีกครั้งนะครับ'
+      });
+
+      // ตอบกลับแอดมิน
+      return client.replyMessage({
+        replyToken: event.replyToken,
+        messages: [{ type: 'text', text: `❌ ปฏิเสธสลิปของลูกค้าแล้ว` }]
+      });
+    }
   }
 
   // Handle text messages
@@ -269,7 +305,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
     return Promise.resolve(null);
   }
 
-  // Handle Image messages (Slip Verification)
+  // Handle Image messages (Manual Slip Verification)
   if (event.type === 'message' && event.message.type === 'image') {
     const cart = userCarts.get(userId);
     
@@ -278,51 +314,53 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       return Promise.resolve(null);
     }
 
-    await showAiLoading(client, userId);
-    
     try {
-      // 1. ดึงภาพจาก LINE
-      const blob = await blobClient.getMessageContent(event.message.id);
-      const imageBuffer = await toBuffer(blob);
-
-      // 2. ส่งให้ Gemini Vision ตรวจ
-      const aiResponse = await verifySlip(imageBuffer, cart.total);
-
-      // 3. เคลียร์ตะกร้าถ้าสำเร็จ (เช็คคำว่า ยืนยัน)
-      if (aiResponse.includes('✅')) {
-        userCarts.delete(userId);
-        
-        // ส่ง Push Notification แจ้งเตือนแอดมินทันทีที่มีออเดอร์ใหม่และโอนเงินแล้ว
-        try {
-          await client.pushMessage('U9113d402b5b45ffb3f45ec48ad14440a', {
-            type: 'text',
-            text: `🔔 มีออเดอร์ใหม่และชำระเงินเรียบร้อยแล้ว!\nยอดรวม: ${cart.total} บาท\nจากลูกค้า ID: ${userId}`
-          });
-        } catch (pushErr) {
-          console.error('Failed to notify admin', pushErr);
-        }
-
-        // แจ้งเตือนลูกค้า
-        return client.replyMessage({
-          replyToken: event.replyToken,
-          messages: [
-            { type: 'text', text: aiResponse },
-            { type: 'text', text: '🔔 แอดมินได้รับแจ้งเตือนออเดอร์ของคุณเรียบร้อยแล้ว เราจะรีบจัดส่งให้เร็วที่สุดครับ ขอบคุณที่ใช้บริการ CRD Tractor Parts 🚜' }
-          ]
-        });
-      } else {
-        return client.replyMessage({
-          replyToken: event.replyToken,
-          messages: [{ type: 'text', text: aiResponse }]
-        });
-      }
-
-    } catch (err) {
-      console.error('Slip Verify Error', err);
-      return client.replyMessage({
+      // 1. ตอบกลับลูกค้า
+      await client.replyMessage({
         replyToken: event.replyToken,
-        messages: [{ type: 'text', text: `เกิดข้อผิดพลาด: ${err.message || String(err)}` }]
+        messages: [{ type: 'text', text: '⏳ ได้รับหลักฐานการโอนเงินแล้ว กรุณารอแอดมินตรวจสอบสักครู่นะครับ' }]
       });
+
+      // 2. ส่ง Push Notification แจ้งเตือนแอดมิน (God Mode)
+      await client.pushMessage('U9113d402b5b45ffb3f45ec48ad14440a', {
+        type: 'flex',
+        altText: '🔔 มีลูกค้าแจ้งโอนเงิน (รอตรวจสอบ)',
+        contents: {
+          type: 'bubble',
+          body: {
+            type: 'box',
+            layout: 'vertical',
+            spacing: 'md',
+            contents: [
+              { type: 'text', text: '🔔 รอตรวจสอบสลิป', weight: 'bold', size: 'xl', color: '#1DB446' },
+              { type: 'text', text: `มีลูกค้าส่งรูปสลิปเข้ามา\nยอดรวมที่ต้องชำระ: ${cart.total} บาท`, wrap: true },
+              { type: 'text', text: 'รบกวนแอดมินดูรูปสลิปที่ลูกค้าส่งมา แล้วกดยืนยันด้านล่างนี้ครับ', size: 'sm', color: '#888888', wrap: true }
+            ]
+          },
+          footer: {
+            type: 'box',
+            layout: 'horizontal',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'button',
+                style: 'primary',
+                color: '#1DB446',
+                action: { type: 'postback', label: '✅ อนุมัติ', data: `action=approve_slip&userId=${userId}` }
+              },
+              {
+                type: 'button',
+                style: 'primary',
+                color: '#d32f2f',
+                action: { type: 'postback', label: '❌ ปฏิเสธ', data: `action=reject_slip&userId=${userId}` }
+              }
+            ]
+          }
+        }
+      });
+      return Promise.resolve(null);
+    } catch (err) {
+      console.error('Slip Notify Error', err);
     }
   }
 
