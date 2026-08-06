@@ -193,9 +193,36 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       const match = text.match(/ยอดรวม:\s*(\d+)/);
       if (match) {
         const total = parseInt(match[1], 10);
-        userCarts.set(userId, { total, items: [] });
+        userCarts.set(userId, { total, items: ['สินค้าสั่งจากหน้าเว็บ LIFF'] });
+        
+        try {
+          // สร้าง QR Code พร้อมเพย์สำหรับ LIFF Order
+          const mobileNumber = '0627905333';
+          const payload = generatePayload(mobileNumber, { amount: total });
+          
+          const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+          if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+          
+          const qrFilename = `qr_${userId}_${Date.now()}.png`;
+          const qrPath = path.join(uploadsDir, qrFilename);
+          
+          await qrcode.toFile(qrPath, payload, { color: { dark: '#000000', light: '#ffffff' }, width: 500 });
+          
+          const qrUrl = `${baseUrl}/uploads/${qrFilename}`;
+
+          return client.replyMessage({
+            replyToken: event.replyToken,
+            messages: [
+              { type: 'text', text: `📝 บันทึกออเดอร์สำเร็จ!\n💰 ยอดชำระทั้งหมด: ${total} บาท\n\n💳 สแกนจ่ายผ่าน QR Code พร้อมเพย์ด้านล่างนี้ได้เลยครับ 👇` },
+              { type: 'image', originalContentUrl: qrUrl, previewImageUrl: qrUrl },
+              { type: 'text', text: `📸 **เมื่อโอนเงินแล้ว กรุณาส่งรูปสลิปเข้ามาในแชทนี้ได้เลยครับ!**` }
+            ]
+          });
+        } catch (err) {
+          console.error('QR Gen Error in LIFF:', err);
+        }
       }
-      return Promise.resolve(null); // ไม่ต้องตอบกลับ ให้ลูกค้าแนบสลิปต่อเลย
+      return Promise.resolve(null);
     }
 
     if (text === 'ขอใบเสนอราคา') {
@@ -422,6 +449,10 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
     }
 
     try {
+      // ดึงข้อมูลรูปภาพจาก LINE Server
+      const blob = await blobClient.getMessageContent(event.message.id);
+      const imageBuffer = await toBuffer(blob);
+
       // Save image to disk for LIFF Admin Panel
       const slipFilename = `slip_${userId}_${Date.now()}.jpg`;
       const slipPath = path.join(process.cwd(), 'public', 'uploads', slipFilename);
