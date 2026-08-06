@@ -16,6 +16,7 @@ const app = express();
 
 // Middleware
 app.use(express.static('public'));
+app.use('/public', express.static('public')); // Keep this for backward compatibility with LINE Developer Console settings
 
 // --- Admin APIs ---
 app.get('/api/admin/pending', (req, res) => {
