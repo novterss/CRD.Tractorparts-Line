@@ -1,6 +1,6 @@
 export function createProductCatalog(baseUrl = '') {
-  const imageUrl1 = baseUrl ? `${baseUrl}/public/S0068.jpg` : 'https://images.unsplash.com/photo-1616238383804-0c58e733075d?auto=format&fit=crop&q=80&w=800&h=533';
-  const imageUrl2 = baseUrl ? `${baseUrl}/public/S0070.jpg` : 'https://images.unsplash.com/photo-1587829462796-03714f3aebcb?auto=format&fit=crop&q=80&w=800&h=533';
+  const imageUrl1 = baseUrl ? `${baseUrl}/public/oil.jpg` : 'https://images.unsplash.com/photo-1616238383804-0c58e733075d?auto=format&fit=crop&q=80&w=800&h=533';
+  const imageUrl2 = baseUrl ? `${baseUrl}/public/track.webp` : 'https://images.unsplash.com/photo-1587829462796-03714f3aebcb?auto=format&fit=crop&q=80&w=800&h=533';
 
   return {
     type: 'flex',
