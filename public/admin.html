@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - CRD Tractor Parts</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+    h1 { text-align: center; color: #2c3e50; }
+    .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .slip-img { max-width: 100%; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; }
+    button { background: #1DB446; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+    button.reject { background: #d32f2f; }
+    .tracking-input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-right: 10px; width: 60%; }
+    #loginStatus { text-align: center; color: #888; font-size: 14px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🛠️ Admin Dashboard</h1>
+  <div id="loginStatus">Authenticating...</div>
+  
+  <div id="slipsContainer"></div>
+
+  <script>
+    async function fetchPendingSlips() {
+      try {
+        const res = await fetch('/api/admin/pending');
+        const slips = await res.json();
+        const container = document.getElementById('slipsContainer');
+        
+        if (slips.length === 0) {
+          container.innerHTML = '<div class="card"><p style="text-align:center;">🎉 ไม่มีสลิปรอตรวจสอบ</p></div>';
+          return;
+        }
+
+        container.innerHTML = slips.map(slip => `
+          <div class="card" id="card-${slip.userId}">
+            <h3>ลูกค้า ID: ${slip.userId.substring(0,8)}...</h3>
+            <p><strong>ยอดที่ต้องชำระ:</strong> ${slip.total} บาท</p>
+            <img src="${slip.imageUrl}" class="slip-img" alt="Slip" />
+            <br/>
+            <button onclick="approveSlip('${slip.userId}')">✅ อนุมัติสลิป & เลื่อนขั้น VIP</button>
+            <br/><br/>
+            <hr/>
+            <h4>📦 อัปเดตเลขพัสดุ (Order Tracking)</h4>
+            <input type="text" id="track-${slip.userId}" class="tracking-input" placeholder="ใส่เลขพัสดุ เช่น KERRY-12345" />
+            <button onclick="shipOrder('${slip.userId}')">ส่งเลขพัสดุ</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        alert('Failed to load data: ' + err.message);
+      }
+    }
+
+    async function approveSlip(userId) {
+      if (!confirm('ยืนยันอนุมัติสลิปนี้?')) return;
+      try {
+        const res = await fetch('/api/admin/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        if (res.ok) {
+          alert('✅ อนุมัติสำเร็จ! ลูกค้าได้รับแต้ม VIP แล้ว');
+          fetchPendingSlips(); // refresh
+        } else {
+          alert('❌ อนุมัติล้มเหลว');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function shipOrder(userId) {
+      const trackingNo = document.getElementById(`track-${userId}`).value;
+      if (!trackingNo) return alert('กรุณาใส่เลขพัสดุ!');
+      if (!confirm('ยืนยันส่งเลขพัสดุ ' + trackingNo + ' ?')) return;
+      
+      try {
+        const res = await fetch('/api/admin/ship', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, trackingNo })
+        });
+        if (res.ok) {
+          alert('✅ แจ้งเลขพัสดุให้ลูกค้าเรียบร้อยแล้ว');
+        } else {
+          alert('❌ ล้มเหลว');
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // Initialize LIFF
+    liff.init({ liffId: "2011006005-b85CrMdl" }).then(() => {
+      if (liff.isLoggedIn()) {
+        liff.getProfile().then(profile => {
+          document.getElementById('loginStatus').innerText = `Logged in as Admin: ${profile.displayName}`;
+          fetchPendingSlips();
+        });
+      } else {
+        liff.login();
+      }
+    }).catch(err => {
+      document.getElementById('loginStatus').innerText = 'LIFF Init Error: ' + err.message;
+      fetchPendingSlips(); // Fallback for testing on desktop browser
+    });
+  </script>
+</body>
+</html>

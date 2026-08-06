@@ -2,13 +2,10 @@ import { createProductCatalog } from '../messages/flexMenu.js';
 import { createQuotationFlex } from '../messages/quotationFlex.js';
 import { createVipCardFlex } from '../messages/vipFlex.js';
 import { createTrackingFlex } from '../messages/trackingFlex.js';
-import { askGemini, verifySlip, processAudio } from '../services/geminiService.js';
-
-// เก็บข้อมูลตะกร้าสินค้าของลูกค้าแต่ละคน (ใน Memory ชั่วคราวสำหรับโปรเจกต์)
-const userCarts = new Map();
-const userPoints = new Map();
-const userOrders = new Map();
-let adminId = 'U9113d402b5b45ffb3f45ec48ad14440a'; // Default Admin ID
+import { askGemini, processAudio } from '../services/geminiService.js';
+import { userCarts, userPoints, userOrders, pendingSlips, adminId, setAdminId } from '../store.js';
+import fs from 'fs';
+import path from 'path';
 
 // Helper สำหรับแปลงข้อมูลจาก LINE เป็น Buffer (รองรับทั้ง Blob และ Stream)
 async function toBuffer(data) {
@@ -136,7 +133,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       
       const cart = userCarts.get(customerId);
       if (cart) {
-        const currentData = userPoints.get(customerId) || { points: 0, tier: 'BRONZE' };
+      const currentData = userPoints.get(customerId) || { points: 0, tier: 'BRONZE' };
         currentData.points += Math.floor(cart.total / 100);
         if (currentData.points >= 50) currentData.tier = 'GOLD';
         else if (currentData.points >= 20) currentData.tier = 'SILVER';
@@ -237,7 +234,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
 
     // Admin God Mode Commands
     if (text === '/admin') {
-      adminId = userId;
+      setAdminId(userId);
       return client.replyMessage({
         replyToken: event.replyToken,
         messages: [{ type: 'text', text: `👑 [SYSTEM] ตั้งค่าบัญชีของคุณเป็น ADMIN เรียบร้อยแล้ว! (ID: ${userId})\n\nคุณจะได้รับการแจ้งเตือนสลิปโอนเงินทั้งหมดนับจากนี้ครับ` }]
@@ -386,13 +383,28 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
     }
 
     try {
+      // Save image to disk for LIFF Admin Panel
+      const slipFilename = `slip_${userId}_${Date.now()}.jpg`;
+      const slipPath = path.join(process.cwd(), 'public', 'uploads', slipFilename);
+      fs.writeFileSync(slipPath, imageBuffer);
+      
+      // Add to pending slips
+      pendingSlips.set(userId, {
+        total: cart.total,
+        imageUrl: `/uploads/${slipFilename}`,
+        timestamp: Date.now()
+      });
+
       // 1. ตอบกลับลูกค้า
       await client.replyMessage({
         replyToken: event.replyToken,
-        messages: [{ type: 'text', text: '⏳ ได้รับหลักฐานการโอนเงินแล้ว กรุณารอแอดมินตรวจสอบสักครู่นะครับ' }]
+        messages: [
+          { type: 'text', text: '⏳ ได้รับหลักฐานการโอนเงินแล้ว กรุณารอแอดมินตรวจสอบสักครู่นะครับ' },
+          { type: 'text', text: 'ℹ️ แอดมินสามารถตรวจสอบสลิปและจัดการออเดอร์ได้ที่ระบบหลังบ้าน (Admin Dashboard) ผ่านเว็บ LIFF ครับ' }
+        ]
       });
 
-      // 2. ส่ง Push Notification แจ้งเตือนแอดมิน (God Mode)
+      // 2. ส่ง Push Notification แจ้งเตือนแอดมิน (God Mode / เผื่อขี้เกียจเปิดเว็บ)
       await client.pushMessage(adminId, {
         type: 'flex',
         altText: '🔔 มีลูกค้าแจ้งโอนเงิน (รอตรวจสอบ)',
