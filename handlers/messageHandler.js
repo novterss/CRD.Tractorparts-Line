@@ -57,6 +57,14 @@ export async function handleEvent(client, event, baseUrl) {
               {
                 type: 'action',
                 action: {
+                  type: 'uri',
+                  label: '🌐 สั่งซื้อผ่านเว็บ',
+                  uri: 'https://liff.line.me/2011006005-b85CrMdl'
+                }
+              },
+              {
+                type: 'action',
+                action: {
                   type: 'message',
                   label: '❓ วิธีใช้งาน',
                   text: 'ช่วยเหลือ'
@@ -150,7 +158,19 @@ export async function handleEvent(client, event, baseUrl) {
         messages: [
           {
             type: 'text',
-            text: 'ต้องการความช่วยเหลือด้านไหนครับ? 🚜\n\n1. ดูสินค้า: พิมพ์ "เมนู"\n2. ปรึกษาปัญหาเครื่องจักร: พิมพ์คำว่า "ถาม" นำหน้าคำถาม (เช่น "ถาม รถขุดตีนตะขาบหลุด ทำไงดี?")\n3. ติดต่อพนักงาน: พิมพ์ "ติดต่อ"'
+            text: 'ต้องการความช่วยเหลือด้านไหนครับ? 🚜\n\n1. ดูสินค้า (Flex): พิมพ์ "เมนู"\n2. สั่งซื้อผ่านเว็บ (LIFF): กดปุ่ม 🌐 สั่งซื้อผ่านเว็บ\n3. ปรึกษาช่าง: พิมพ์คำว่า "ถาม" นำหน้าคำถาม\n4. ติดต่อแอดมิน: พิมพ์ "ติดต่อ"',
+            quickReply: {
+              items: [
+                {
+                  type: 'action',
+                  action: {
+                    type: 'uri',
+                    label: '🌐 สั่งซื้อผ่านเว็บ',
+                    uri: 'https://liff.line.me/2011006005-b85CrMdl'
+                  }
+                }
+              ]
+            }
           }
         ]
       });
