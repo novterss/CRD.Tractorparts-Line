@@ -308,7 +308,7 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       
       try {
         // สร้าง QR Code พร้อมเพย์
-        const mobileNumber = '0974749944'; // เบอร์พร้อมเพย์ร้านค้า
+        const mobileNumber = '0627905333'; // เบอร์พร้อมเพย์ร้านค้า
         const payload = generatePayload(mobileNumber, { amount: cart.total });
         const qrFilename = `qr_${userId}_${Date.now()}.png`;
         const qrPath = path.join(process.cwd(), 'public', 'uploads', qrFilename);
