@@ -1,36 +1,41 @@
 # 🚜 CRD Tractor Parts - Next-Gen AI LINE Official Account
 
-![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
-![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)
-![LINE Messaging API](https://img.shields.io/badge/LINE_Messaging_API-00C300?style=for-the-badge&logo=LINE&logoColor=white)
-![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=Google&logoColor=white)
+ระบบ LINE Official Account สำหรับร้านขายอะไหล่รถไถ (CRD Tractor Parts) รองรับระบบปรึกษาปัญหาเครื่องจักรด้วย AI, การสั่งซื้อสินค้าผ่านแคตตาล็อก LIFF, การสร้าง PromptPay QR Code อัตโนมัติ, การตรวจสอบสลิปโอนเงินผ่านระบบ Admin Dashboard, และระบบสะสมแต้ม VIP (CRM) แบบครบวงจร
 
-This repository contains the source code for the **CRD Tractor Parts** LINE Official Account bot. Built for the modern e-commerce era, this project combines **AI-powered customer service** with a robust **Omnichannel Admin Dashboard** to create a seamless end-to-end shopping experience—from product inquiry to checkout, payment verification, and logistics tracking.
+**Github :** [novterss/CRD.Tractorparts-Line](https://github.com/novterss/CRD.Tractorparts-Line)
+**Readme ของโปรเจ็ค :** [CRD.Tractorparts-Line/README.md](https://github.com/novterss/CRD.Tractorparts-Line/blob/main/README.md)
+**Docs ของโปรเจ็คแบบละเอียด EN/TH :** [CRD.Tractorparts-Line/docs](https://github.com/novterss/CRD.Tractorparts-Line/tree/main/docs)
+**Manual การใช้งาน :** [Manual.pdf](#) *(Coming Soon)*
+**Link สำหรับแอดเพื่อน Line OA :** [https://line.me/R/ti/p/@927bswpu](https://line.me/R/ti/p/@927bswpu)
 
-> 📚 **Detailed Documentation**
-> - 🇹🇭 [สถาปัตยกรรมระบบ (System Architecture - TH) ](./docs/THAI/SYSTEM_ARCHITECTURE.md)
-> - 🇹🇭 [กระบวนการใช้งาน (User Flow - TH)](./docs/THAI/USER_FLOW.md)
-> - 🇬🇧 [System Architecture (EN)](./docs/ENG/SYSTEM_ARCHITECTURE.md)
-> - 🇬🇧 [User Flow (EN)](./docs/ENG/USER_FLOW.md)
+---
 
-## 🌟 Key Features (ฟีเจอร์หลัก)
+## 🌟 ฟีเจอร์หลัก (Key Features)
 
-- **Customer Catalog (LIFF):** ลูกค้าสามารถเปิดหน้าแคตตาล็อกผ่าน LIFF Web App เลือกสินค้าลงตะกร้า และส่งรายการสรุปออเดอร์เข้าแชท LINE ได้ทันที
+- **AI Mechanic Consultant:** ล้ำหน้าด้วยการเชื่อมต่อกับ Gemini 1.5 Flash ทำหน้าที่เป็นช่างเทคนิคที่คอยให้คำปรึกษาปัญหาเครื่องจักรเบื้องต้นได้อย่างชาญฉลาดและเป็นธรรมชาติ (Context Memory)
+- **Customer Catalog (LIFF):** ลูกค้าสามารถเปิดหน้าแคตตาล็อกผ่าน LIFF Web App เลือกสินค้าลงตะกร้า และส่งรายการสรุปออเดอร์ (Checkout) เข้าไปในแชท LINE ได้ทันที
 - **Dynamic PromptPay QR Code:** เมื่อลูกค้ากดสั่งซื้อหรือขอชำระเงิน บอทจะคำนวณยอดรวมและสร้างรูปภาพ QR Code พร้อมเพย์ที่ฝังยอดเงินเป๊ะๆ ส่งกลับให้ลูกค้าสแกนจ่ายได้ทันที (ลดความผิดพลาดในการโอนเงิน)
-- **Omnichannel Admin Dashboard (Web + LINE):** ระบบจัดการร้านค้า 2 ช่องทาง! แอดมินสามารถกดยืนยันสลิปผ่านทาง LINE แชทได้ทันทีเมื่ออยู่ข้างนอก (God Mode) หรือล็อกอินผ่านเว็บไซต์หลังบ้าน (PIN Protection) เพื่อตรวจสอบสลิปและกรอกเลขพัสดุได้อย่างเป็นระบบ
+- **Omnichannel Admin Dashboard (Web + LINE):** ระบบจัดการร้านค้า 2 ช่องทาง! แอดมินสามารถกดยืนยันสลิปผ่านทาง LINE แชทได้ทันทีเมื่ออยู่ข้างนอก (God Mode: `/admin fatmonkey`) หรือล็อกอินผ่านเว็บไซต์หลังบ้าน (PIN Protection: `fatmonkey`) เพื่อตรวจสอบสลิปและกรอกเลขพัสดุได้อย่างเป็นระบบ
 - **Automated CRM & VIP System:** เมื่อแอดมินกด "อนุมัติสลิป" ลูกค้าจะได้รับแต้มสะสมโดยอัตโนมัติ (100 บาท = 1 แต้ม) และสามารถเช็คสถานะ VIP (BRONZE, SILVER, GOLD) ผ่านรูปแบบการ์ดสะสมแต้ม (Flex Message) สุดพรีเมียม
 - **Smart Logistics Tracking:** แอดมินสามารถส่งเลขพัสดุให้ลูกค้าผ่านระบบหลังบ้าน ลูกค้าจะได้รับการ์ดสถานะจัดส่ง พร้อมปุ่มกดลิงก์เช็คสถานะกับ KEX (Kerry Express) แบบเรียลไทม์
-- **AI Mechanic Consultant:** บอทเชื่อมต่อกับ Gemini 1.5 Flash ทำหน้าที่เป็นช่างเทคนิคที่คอยให้คำปรึกษาปัญหาเครื่องจักรเบื้องต้นได้อย่างชาญฉลาด
+- **Store Location & Contact:** พิมพ์ "ติดต่อ" เพื่อรับที่อยู่ พิกัด Google Maps และเบอร์โทรศัพท์ของหน้าร้านทันที
+
+---
 
 ## 🛠 Tech Stack & Infrastructure
 
 | Layer | Technology | หน้าที่ |
 | --- | --- | --- |
-| **Frontend** | Vanilla HTML, CSS, JS | หน้าต่างแคตตาล็อก LIFF และระบบตะกร้าสินค้า (Floating Cart) |
-| **Backend** | Node.js + Express.js | REST API + ระบบรับ LINE Webhook |
-| **AI Processing** | Google Gemini 1.5 Flash | ประมวลผลภาษา (Chat) และประมวลผลภาพ (OCR อ่านสลิป) |
-| **LINE Integration** | @line/bot-sdk v9 | ส่ง Flex Message, รับ Webhook, ส่ง Push Notification |
-| **Deployment** | Render.com | Cloud Hosting สำหรับรันเซิร์ฟเวอร์แบบ 24/7 |
+| **Frontend** | Vanilla HTML, CSS, JavaScript | หน้าต่างแคตตาล็อก LIFF, ระบบตะกร้าสินค้า และหน้า Admin Dashboard |
+| **Backend** | Node.js + Express.js | REST API + ระบบรับและจัดการ LINE Webhook |
+| **Database** | In-Memory (ES6 Map) | จัดการ State ของตะกร้าสินค้า แต้มสะสม และออเดอร์เพื่อความรวดเร็วสูงสุด |
+| **File Storage** | Local File System (Render) | เก็บไฟล์รูป QR Code และสลิปโอนเงินชั่วคราว |
+| **AI Processing** | Google Gemini 1.5 Flash | ประมวลผลภาษา (Natural Language Processing) ตอบคำถามทางเทคนิค |
+| **LINE Integration** | @line/bot-sdk v9 | ส่ง Flex Message, รับ Webhook, ส่ง Push Notification, ดึงข้อมูลรูปภาพสลิป |
+| **QR Generation** | promptpay-qr + qrcode | สร้างรูป PromptPay QR Code แบบ Dynamic ฝังยอดเงิน |
+| **Deployment** | Render.com | Cloud Hosting สำหรับรันเซิร์ฟเวอร์แบบ 24/7 (Auto Deploy) |
+
+---
 
 ## 🚀 Setup Instructions
 
@@ -45,9 +50,9 @@ This repository contains the source code for the **CRD Tractor Parts** LINE Offi
    ```
 5. Run `npm run dev` to start the local development server.
 
-## 👨‍💻 Authors
+---
+
+## 👨‍💻 ผู้จัดทำ (Authors)
 
 - **ณพัชรกัณฑ์ พัชญ์ชัยพงศา (6800401)**
 - **ธนากร ยั่งยืน (6803317)**
-
-*Link สำหรับแอดเพื่อน Line OA : [https://line.me/R/ti/p/@927bswpu](https://line.me/R/ti/p/@927bswpu)*

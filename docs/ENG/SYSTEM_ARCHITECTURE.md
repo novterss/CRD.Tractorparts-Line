@@ -1,36 +1,30 @@
-# System Architecture - CRD Tractor Parts AI Bot
+# System Architecture - CRD Tractor Parts
 
-This project is architected as a **"Zero-Admin Operation"** system, utilizing advanced Generative AI for both text and vision processing to completely replace traditional manual dashboard approval workflows.
+This document outlines the software structure and architecture of the CRD Tractor Parts LINE Official Account system.
 
-## System Overview
+## 1. High-Level Architecture
 
-```mermaid
-graph TD
-    A[Customer] -->|Chat / Send Image| B(LINE Messaging API)
-    A -->|Open LIFF App| C(LIFF E-Commerce)
-    C -->|Send Order (liff.sendMessages)| B
-    B -->|Webhook| D{Node.js + Express Backend}
-    D -->|Ask Technical Question| E(Gemini 1.5 Flash - Text)
-    D -->|Send Payment Slip| F(Gemini 1.5 Flash - Vision)
-    E -->|Expert Response| D
-    F -->|Verify Amount (OCR)| D
-    D -->|Push Notification| G[Admin]
-    D -->|Order Summary| B
-    B -->|Confirmation Msg| A
-```
+The system consists of 4 main components:
+1. **LINE Client (Users):** Customers interact with the bot via LINE Chat and LIFF App.
+2. **Node.js Webhook Server (Core Backend):** The main server (Express.js) that receives LINE Webhooks, parses data, and processes business logic.
+3. **AI Engine (Gemini 1.5 Flash):** Google's AI model used for technical consultations regarding tractor issues.
+4. **Omnichannel Admin Dashboard:** A web interface (HTML/JS) for administrators to manage orders, connected to the backend via REST APIs.
 
-## Tech Stack
+## 2. Data Flow
 
-| Layer | Technology | Function |
-| --- | --- | --- |
-| **Frontend** | Vanilla HTML, CSS, JS | LIFF Catalog Interface and Real-time Floating Cart System |
-| **Backend** | Node.js + Express.js | Webhook handler and message routing logic |
-| **AI Processing** | Google Gemini 1.5 Flash | Natural Language Processing (Virtual Mechanic) and Vision Processing (Slip Scanner) |
-| **State Management**| In-Memory Map | Maintains Context Memory for chats and temporary user cart sessions |
-| **LINE Integration**| @line/bot-sdk | Manages Flex Messages, Quick Replies, Webhook processing, and Push Messages |
-| **Deployment** | Render.com | Cloud Hosting for 24/7 continuous operation |
+- **Incoming Events:** LINE Platform sends HTTP POST requests to `/callback`.
+- **Signature Validation:** Secures the endpoint using `CHANNEL_SECRET`.
+- **Event Dispatching:** Routes events (Text, Image) to `messageHandler.js`.
+- **State Management:** User states (Shopping Cart, VIP Points, Orders) are stored in an In-Memory `Map` inside `store.js` for ultra-fast read/write operations.
 
-## Key Technical Leaps
-1. **Multimodal AI Verification:** Unlike traditional E-Commerce bots that require a human admin to log into a dashboard to verify payment slips, this system intercepts the image stream directly from the LINE Server and feeds it into the AI's Vision model. It instantly reads the digits and verifies the payment, cutting verification time from minutes to milliseconds.
-2. **Context-Aware Memory:** This is not a basic rule-based bot. It stores conversation histories, allowing the AI to understand subsequent questions naturally.
-3. **Hybrid Handoff Protocol:** Built with collision avoidance. If a user sends a normal message that does not trigger specific keywords, the bot remains silent (stands down), allowing a human admin to take over the conversation seamlessly without bot interference.
+## 3. API Integrations
+
+- **LINE Messaging API (v9):** Utilized for `replyMessage` (answering chats), `pushMessage` (admin alerts/VIP upgrades), and fetching uploaded slip images.
+- **Google Generative AI:** Uses `generateContent` to analyze user inquiries and provide expert mechanical advice.
+- **QR Code Generation:** Generates Dynamic PromptPay QR codes locally using the `qrcode` library and serves them via the `public/uploads` static directory.
+
+## 4. Security Measures
+
+- **Webhook Validation:** Prevents unauthorized HTTP requests.
+- **Admin Authentication:** Two-layer security for admin access (Chat Command password `/admin fatmonkey` and Web Dashboard PIN protection).
+- **Data Privacy:** Slip images are stored temporarily in an ephemeral storage environment and automatically purged on server restarts.
