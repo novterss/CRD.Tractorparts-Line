@@ -5,10 +5,15 @@ import { askGemini, verifySlip, processAudio } from '../services/geminiService.j
 // เก็บข้อมูลตะกร้าสินค้าของลูกค้าแต่ละคน (ใน Memory ชั่วคราวสำหรับโปรเจกต์)
 const userCarts = new Map();
 
-// Helper สำหรับแปลง Stream รูปภาพจาก LINE เป็น Buffer
-async function streamToBuffer(stream) {
+// Helper สำหรับแปลงข้อมูลจาก LINE เป็น Buffer (รองรับทั้ง Blob และ Stream)
+async function toBuffer(data) {
+  if (Buffer.isBuffer(data)) return data;
+  if (data.arrayBuffer) {
+    const arrayBuf = await data.arrayBuffer();
+    return Buffer.from(arrayBuf);
+  }
   const chunks = [];
-  for await (const chunk of stream) {
+  for await (const chunk of data) {
     chunks.push(chunk);
   }
   return Buffer.concat(chunks);
@@ -26,7 +31,7 @@ async function showAiLoading(client, userId) {
   }
 }
 
-export async function handleEvent(client, event, baseUrl) {
+export async function handleEvent(client, blobClient, event, baseUrl) {
   const userId = event.source.userId;
 
   // Handle follow event
@@ -268,8 +273,8 @@ export async function handleEvent(client, event, baseUrl) {
     
     try {
       // 1. ดึงภาพจาก LINE
-      const stream = await client.getMessageContent(event.message.id);
-      const imageBuffer = await streamToBuffer(stream);
+      const blob = await blobClient.getMessageContent(event.message.id);
+      const imageBuffer = await toBuffer(blob);
 
       // 2. ส่งให้ Gemini Vision ตรวจ
       const aiResponse = await verifySlip(imageBuffer, cart.total);
@@ -307,7 +312,7 @@ export async function handleEvent(client, event, baseUrl) {
       console.error('Slip Verify Error', err);
       return client.replyMessage({
         replyToken: event.replyToken,
-        messages: [{ type: 'text', text: 'เกิดข้อผิดพลาดในการโหลดรูปภาพ กรุณารอแอดมินมาตรวจสอบสักครู่นะครับ' }]
+        messages: [{ type: 'text', text: `เกิดข้อผิดพลาด: ${err.message || String(err)}` }]
       });
     }
   }
@@ -316,8 +321,8 @@ export async function handleEvent(client, event, baseUrl) {
   if (event.type === 'message' && event.message.type === 'audio') {
     await showAiLoading(client, userId);
     try {
-      const stream = await client.getMessageContent(event.message.id);
-      const audioBuffer = await streamToBuffer(stream);
+      const blob = await blobClient.getMessageContent(event.message.id);
+      const audioBuffer = await toBuffer(blob);
       const aiResponse = await processAudio(userId, audioBuffer);
       
       return client.replyMessage({

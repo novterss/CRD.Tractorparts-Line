@@ -7,6 +7,9 @@ const config = { channelSecret: process.env.CHANNEL_SECRET };
 const client = new line.messagingApi.MessagingApiClient({
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
 });
+const blobClient = new line.messagingApi.MessagingApiBlobClient({
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+});
 
 const app = express();
 
@@ -20,7 +23,7 @@ app.post('/callback', line.middleware(config), async (req, res) => {
   try {
     const baseUrl = `https://${req.get('host')}`;
     const events = req.body.events;
-    await Promise.all(events.map((event) => handleEvent(client, event, baseUrl)));
+    await Promise.all(events.map((event) => handleEvent(client, blobClient, event, baseUrl)));
     res.status(200).end();
   } catch (err) {
     console.error('Error processing event:', err);
