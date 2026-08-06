@@ -44,7 +44,8 @@ app.post('/api/admin/approve', express.json(), async (req, res) => {
   pendingSlips.delete(userId);
 
   try {
-    await client.pushMessage(userId, {
+    await client.pushMessage({
+      to: userId,
       messages: [{
         type: 'text',
         text: '✅ [การแจ้งเตือนจากระบบ]\nแอดมินตรวจสอบและยืนยันสลิปของคุณผ่านระบบ Web Admin เรียบร้อยแล้ว!\nคุณได้รับแต้มสะสมเพิ่ม พิมพ์ "เช็คแต้ม" เพื่อดูสถานะ VIP ของคุณได้เลย\n\nออเดอร์ของคุณกำลังถูกจัดเตรียม ขอบคุณที่ใช้บริการครับ 🚜'
@@ -62,7 +63,8 @@ app.post('/api/admin/ship', express.json(), async (req, res) => {
   
   // Need to import createTrackingFlex, but we can just send text for simplicity in index.js
   try {
-    await client.pushMessage(userId, {
+    await client.pushMessage({
+      to: userId,
       messages: [{ type: 'text', text: `📦 ออเดอร์ของคุณได้รับการจัดส่งเรียบร้อยแล้ว!\nบริษัทขนส่ง: Kerry Express\nเลขพัสดุ: ${trackingNo}\n\nคุณสามารถพิมพ์ "ติดตามพัสดุ" เพื่อดูสถานะได้ตลอดเวลาครับ` }]
     });
     res.json({ success: true });

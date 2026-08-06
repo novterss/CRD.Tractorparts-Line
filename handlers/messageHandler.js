@@ -145,7 +145,8 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       userCarts.delete(customerId); // Clear cart
 
       // แจ้งลูกค้า
-      await client.pushMessage(customerId, {
+      await client.pushMessage({
+        to: customerId,
         messages: [{
           type: 'text',
           text: '✅ [การแจ้งเตือนจากระบบ]\nแอดมินตรวจสอบและยืนยันสลิปของคุณเรียบร้อยแล้ว!\nคุณได้รับแต้มสะสมเพิ่ม พิมพ์ "เช็คแต้ม" เพื่อดูสถานะ VIP ของคุณได้เลย\n\nออเดอร์ของคุณกำลังถูกจัดเตรียม ขอบคุณที่ใช้บริการครับ 🚜'
@@ -164,9 +165,12 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       if (userId !== adminId) return Promise.resolve(null);
       
       // แจ้งลูกค้า
-      await client.pushMessage(customerId, {
-        type: 'text',
-        text: '❌ [การแจ้งเตือนจากระบบ]\nสลิปของคุณไม่ถูกต้อง หรือยอดเงินไม่ตรงตามที่กำหนด\n\nกรุณาตรวจสอบและส่งรูปสลิปเข้ามาใหม่อีกครั้งนะครับ'
+      await client.pushMessage({
+        to: customerId,
+        messages: [{
+          type: 'text',
+          text: '❌ [การแจ้งเตือนจากระบบ]\nสลิปของคุณไม่ถูกต้อง หรือยอดเงินไม่ตรงตามที่กำหนด\n\nกรุณาตรวจสอบและส่งรูปสลิปเข้ามาใหม่อีกครั้งนะครับ'
+        }]
       });
 
       // ตอบกลับแอดมิน
@@ -305,7 +309,8 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
           userOrders.set(targetId, { trackingNo });
           
           try {
-            await client.pushMessage(targetId, {
+            await client.pushMessage({
+              to: targetId,
               messages: [createTrackingFlex(trackingNo)]
             });
             return client.replyMessage({
@@ -475,41 +480,44 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
       });
 
       // 2. ส่ง Push Notification แจ้งเตือนแอดมิน (God Mode / เผื่อขี้เกียจเปิดเว็บ)
-      await client.pushMessage(adminId, {
-        type: 'flex',
-        altText: '🔔 มีลูกค้าแจ้งโอนเงิน (รอตรวจสอบ)',
-        contents: {
-          type: 'bubble',
-          body: {
-            type: 'box',
-            layout: 'vertical',
-            spacing: 'md',
-            contents: [
-              { type: 'text', text: '🔔 รอตรวจสอบสลิป', weight: 'bold', size: 'xl', color: '#1DB446' },
-              { type: 'text', text: `ยอดรวมที่ต้องชำระ: ${cart.total} บาท\nรหัสลูกค้า: ${userId}`, wrap: true },
-              { type: 'text', text: 'รบกวนแอดมินดูรูปสลิปที่ลูกค้าส่งมา แล้วกดยืนยันด้านล่างนี้ครับ', size: 'sm', color: '#888888', wrap: true }
-            ]
-          },
-          footer: {
-            type: 'box',
-            layout: 'horizontal',
-            spacing: 'sm',
-            contents: [
-              {
-                type: 'button',
-                style: 'primary',
-                color: '#1DB446',
-                action: { type: 'postback', label: '✅ อนุมัติ', data: `action=approve_slip&userId=${userId}` }
-              },
-              {
-                type: 'button',
-                style: 'primary',
-                color: '#d32f2f',
-                action: { type: 'postback', label: '❌ ปฏิเสธ', data: `action=reject_slip&userId=${userId}` }
-              }
-            ]
+      await client.pushMessage({
+        to: adminId,
+        messages: [{
+          type: 'flex',
+          altText: '🔔 มีลูกค้าแจ้งโอนเงิน (รอตรวจสอบ)',
+          contents: {
+            type: 'bubble',
+            body: {
+              type: 'box',
+              layout: 'vertical',
+              spacing: 'md',
+              contents: [
+                { type: 'text', text: '🔔 รอตรวจสอบสลิป', weight: 'bold', size: 'xl', color: '#1DB446' },
+                { type: 'text', text: `ยอดรวมที่ต้องชำระ: ${cart.total} บาท\nรหัสลูกค้า: ${userId}`, wrap: true },
+                { type: 'text', text: 'รบกวนแอดมินดูรูปสลิปที่ลูกค้าส่งมา แล้วกดยืนยันด้านล่างนี้ครับ', size: 'sm', color: '#888888', wrap: true }
+              ]
+            },
+            footer: {
+              type: 'box',
+              layout: 'horizontal',
+              spacing: 'sm',
+              contents: [
+                {
+                  type: 'button',
+                  style: 'primary',
+                  color: '#1DB446',
+                  action: { type: 'postback', label: '✅ อนุมัติ', data: `action=approve_slip&userId=${userId}` }
+                },
+                {
+                  type: 'button',
+                  style: 'primary',
+                  color: '#d32f2f',
+                  action: { type: 'postback', label: '❌ ปฏิเสธ', data: `action=reject_slip&userId=${userId}` }
+                }
+              ]
+            }
           }
-        }
+        }]
       });
       return Promise.resolve(null);
     } catch (err) {
