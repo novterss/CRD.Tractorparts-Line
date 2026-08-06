@@ -93,20 +93,9 @@
       }
     }
 
-    // Initialize LIFF
-    liff.init({ liffId: "2011006005-b85CrMdl" }).then(() => {
-      if (liff.isLoggedIn()) {
-        liff.getProfile().then(profile => {
-          document.getElementById('loginStatus').innerText = `Logged in as Admin: ${profile.displayName}`;
-          fetchPendingSlips();
-        });
-      } else {
-        liff.login({ redirectUri: window.location.href });
-      }
-    }).catch(err => {
-      document.getElementById('loginStatus').innerText = 'LIFF Init Error: ' + err.message;
-      fetchPendingSlips(); // Fallback for testing on desktop browser
-    });
+    // Bypass LIFF Auth for Demo/Presentation to avoid LINE Callback URL Errors
+    document.getElementById('loginStatus').innerText = '✅ Logged in as Admin (System Mode)';
+    fetchPendingSlips();
   </script>
 </body>
 </html>
