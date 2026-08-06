@@ -10,7 +10,7 @@ const client = new line.messagingApi.MessagingApiClient({
 
 const app = express();
 
-app.use('/public', express.static('..'));
+app.use('/public', express.static('public'));
 
 app.get('/', (_req, res) => {
   res.send('CRD Tractor Parts Bot is running.');
