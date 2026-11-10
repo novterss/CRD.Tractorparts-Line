@@ -43,9 +43,18 @@
   </div>
 
   <script>
+    // The password is checked by the server; the page only keeps it for this tab.
+    let adminKey = '';
+    try { adminKey = sessionStorage.getItem('adminKey') || ''; } catch (e) {}
+
+    function adminHeaders(extra) {
+      return Object.assign({ 'X-Admin-Key': adminKey }, extra || {});
+    }
+
     async function fetchPendingSlips() {
       try {
-        const res = await fetch('/api/admin/pending');
+        const res = await fetch('/api/admin/pending', { headers: adminHeaders() });
+        if (res.status === 401 || res.status === 503) return logout();
         const slips = await res.json();
         const container = document.getElementById('slipsContainer');
         
@@ -78,7 +87,7 @@
       try {
         const res = await fetch('/api/admin/approve', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: adminHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ userId })
         });
         if (res.ok) {
@@ -100,7 +109,7 @@
       try {
         const res = await fetch('/api/admin/ship', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: adminHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ userId, trackingNo })
         });
         if (res.ok) {
@@ -113,22 +122,40 @@
       }
     }
 
-    // PIN Authentication
-    function checkPin() {
+    // PIN Authentication (verified on the server)
+    async function checkPin() {
       const pin = document.getElementById('pinInput').value;
-      if (pin === 'fatmonkey') {
-        document.getElementById('pinOverlay').style.display = 'none';
-        document.getElementById('mainContainer').style.display = 'block';
-        
-        // Bypass LIFF Auth for Demo/Presentation to avoid LINE Callback URL Errors
-        document.getElementById('loginStatus').innerText = '✅ Logged in as Admin (System Mode)';
-        fetchPendingSlips();
+      let ok = false;
+      try {
+        const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'X-Admin-Key': pin } });
+        ok = res.ok;
+      } catch (e) {}
+      if (ok) {
+        adminKey = pin;
+        try { sessionStorage.setItem('adminKey', pin); } catch (e) {}
+        showDashboard();
       } else {
         document.getElementById('pinError').style.display = 'block';
         document.getElementById('pinInput').value = '';
       }
     }
-    
+
+    function showDashboard() {
+      document.getElementById('pinOverlay').style.display = 'none';
+      document.getElementById('mainContainer').style.display = 'block';
+      document.getElementById('loginStatus').innerText = '✅ Logged in as Admin';
+      fetchPendingSlips();
+    }
+
+    function logout() {
+      adminKey = '';
+      try { sessionStorage.removeItem('adminKey'); } catch (e) {}
+      document.getElementById('mainContainer').style.display = 'none';
+      document.getElementById('pinOverlay').style.display = 'flex';
+    }
+
+    if (adminKey) showDashboard();
+
     // Allow pressing Enter to login
     document.getElementById('pinInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') checkPin();

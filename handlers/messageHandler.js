@@ -4,6 +4,7 @@ import { createVipCardFlex } from '../messages/vipFlex.js';
 import { createTrackingFlex } from '../messages/trackingFlex.js';
 import { askGemini, processAudio } from '../services/geminiService.js';
 import { userCarts, userPoints, userOrders, pendingSlips, adminId, setAdminId } from '../store.js';
+import { isAdminPassword } from '../adminAuth.js';
 import fs from 'fs';
 import path from 'path';
 import generatePayload from 'promptpay-qr';
@@ -268,14 +269,14 @@ export async function handleEvent(client, blobClient, event, baseUrl) {
     // Admin God Mode Commands
     if (text.startsWith('/admin')) {
       const parts = text.split(' ');
-      if (parts[1] !== 'fatmonkey') {
+      if (!isAdminPassword(parts[1])) {
         return Promise.resolve(null); // Ignore if password is wrong or missing (so it doesn't alert the user)
       }
       
       setAdminId(userId);
       return client.replyMessage({
         replyToken: event.replyToken,
-        messages: [{ type: 'text', text: `👑 [SYSTEM] ตั้งค่าบัญชีของคุณเป็น ADMIN เรียบร้อยแล้ว! (ID: ${userId})\n\nคุณจะได้รับการแจ้งเตือนสลิปโอนเงินทั้งหมดนับจากนี้ครับ\n\n💻 เข้าสู่ระบบหลังบ้าน (Admin Dashboard):\n${baseUrl}/admin.html\n(PIN: fatmonkey)` }]
+        messages: [{ type: 'text', text: `👑 [SYSTEM] ตั้งค่าบัญชีของคุณเป็น ADMIN เรียบร้อยแล้ว! (ID: ${userId})\n\nคุณจะได้รับการแจ้งเตือนสลิปโอนเงินทั้งหมดนับจากนี้ครับ\n\n💻 เข้าสู่ระบบหลังบ้าน (Admin Dashboard):\n${baseUrl}/admin.html` }]
       });
     }
 

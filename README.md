@@ -15,7 +15,7 @@
 - **AI Mechanic Consultant:** ล้ำหน้าด้วยการเชื่อมต่อกับ Gemini 1.5 Flash ทำหน้าที่เป็นช่างเทคนิคที่คอยให้คำปรึกษาปัญหาเครื่องจักรเบื้องต้นได้อย่างชาญฉลาดและเป็นธรรมชาติ (Context Memory)
 - **Customer Catalog (LIFF):** ลูกค้าสามารถเปิดหน้าแคตตาล็อกผ่าน LIFF Web App เลือกสินค้าลงตะกร้า และส่งรายการสรุปออเดอร์ (Checkout) เข้าไปในแชท LINE ได้ทันที
 - **Dynamic PromptPay QR Code:** เมื่อลูกค้ากดสั่งซื้อหรือขอชำระเงิน บอทจะคำนวณยอดรวมและสร้างรูปภาพ QR Code พร้อมเพย์ที่ฝังยอดเงินเป๊ะๆ ส่งกลับให้ลูกค้าสแกนจ่ายได้ทันที (ลดความผิดพลาดในการโอนเงิน)
-- **Omnichannel Admin Dashboard (Web + LINE):** ระบบจัดการร้านค้า 2 ช่องทาง! แอดมินสามารถกดยืนยันสลิปผ่านทาง LINE แชทได้ทันทีเมื่ออยู่ข้างนอก (God Mode: `/admin fatmonkey`) หรือล็อกอินผ่านเว็บไซต์หลังบ้าน (PIN Protection: `fatmonkey`) เพื่อตรวจสอบสลิปและกรอกเลขพัสดุได้อย่างเป็นระบบ
+- **Omnichannel Admin Dashboard (Web + LINE):** ระบบจัดการร้านค้า 2 ช่องทาง! แอดมินสามารถกดยืนยันสลิปผ่านทาง LINE แชทได้ทันทีเมื่ออยู่ข้างนอก (God Mode: `/admin <ADMIN_PASSWORD>`) หรือล็อกอินผ่านเว็บไซต์หลังบ้าน (PIN = ค่า `ADMIN_PASSWORD`) เพื่อตรวจสอบสลิปและกรอกเลขพัสดุได้อย่างเป็นระบบ
 - **Automated CRM & VIP System:** เมื่อแอดมินกด "อนุมัติสลิป" ลูกค้าจะได้รับแต้มสะสมโดยอัตโนมัติ (100 บาท = 1 แต้ม) และสามารถเช็คสถานะ VIP (BRONZE, SILVER, GOLD) ผ่านรูปแบบการ์ดสะสมแต้ม (Flex Message) สุดพรีเมียม
 - **Smart Logistics Tracking:** แอดมินสามารถส่งเลขพัสดุให้ลูกค้าผ่านระบบหลังบ้าน ลูกค้าจะได้รับการ์ดสถานะจัดส่ง พร้อมปุ่มกดลิงก์เช็คสถานะกับ KEX (Kerry Express) แบบเรียลไทม์
 - **Store Location & Contact:** พิมพ์ "ติดต่อ" เพื่อรับที่อยู่ พิกัด Google Maps และเบอร์โทรศัพท์ของหน้าร้านทันที
@@ -47,7 +47,9 @@
    CHANNEL_SECRET=your_line_channel_secret
    CHANNEL_ACCESS_TOKEN=your_line_channel_access_token
    GEMINI_API_KEY=your_gemini_api_key
+   ADMIN_PASSWORD=choose_a_long_random_password
    ```
+   `ADMIN_PASSWORD` is used for `/admin` in LINE chat and for `/admin.html`. If it is empty, all admin features are disabled.
 5. Run `npm run dev` to start the local development server.
 
 ---

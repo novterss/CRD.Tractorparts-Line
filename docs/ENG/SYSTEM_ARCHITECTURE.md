@@ -26,5 +26,5 @@ The system consists of 4 main components:
 ## 4. Security Measures
 
 - **Webhook Validation:** Prevents unauthorized HTTP requests.
-- **Admin Authentication:** Two-layer security for admin access (Chat Command password `/admin fatmonkey` and Web Dashboard PIN protection).
+- **Admin Authentication:** Two-layer security for admin access (Chat Command password `/admin <ADMIN_PASSWORD>` and Web Dashboard PIN), both checked on the server against the `ADMIN_PASSWORD` environment variable.
 - **Data Privacy:** Slip images are stored temporarily in an ephemeral storage environment and automatically purged on server restarts.

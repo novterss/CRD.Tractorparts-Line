@@ -3,6 +3,7 @@ import express from 'express';
 import * as line from '@line/bot-sdk';
 import { handleEvent } from './handlers/messageHandler.js';
 import { userCarts, userPoints, userOrders, pendingSlips, adminId } from './store.js';
+import { requireAdmin } from './adminAuth.js';
 
 const config = { channelSecret: process.env.CHANNEL_SECRET };
 const client = new line.messagingApi.MessagingApiClient({
@@ -18,7 +19,12 @@ const app = express();
 app.use(express.static('public'));
 app.use('/public', express.static('public')); // Keep this for backward compatibility with LINE Developer Console settings
 
-// --- Admin APIs ---
+// --- Admin APIs (all require the X-Admin-Key header) ---
+app.use('/api/admin', requireAdmin);
+
+// Lets the dashboard check a password without exposing it in the page
+app.post('/api/admin/login', (_req, res) => res.json({ success: true }));
+
 app.get('/api/admin/pending', (req, res) => {
   const slips = [];
   pendingSlips.forEach((data, userId) => {

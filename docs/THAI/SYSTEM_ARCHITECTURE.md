@@ -26,5 +26,5 @@
 ## 4. ความปลอดภัย (Security)
 
 - **Webhook Validation:** ป้องกัน HTTP Request ปลอมที่ไม่ได้มาจาก LINE
-- **Admin Authentication:** การป้องกันการเข้าถึงสิทธิ์แอดมินด้วย Password ในแชท (`/admin fatmonkey`) และ PIN Protection ในหน้า Web Dashboard
+- **Admin Authentication:** การป้องกันการเข้าถึงสิทธิ์แอดมินด้วย Password ในแชท (`/admin <ADMIN_PASSWORD>`) และ PIN ในหน้า Web Dashboard โดยเซิร์ฟเวอร์ตรวจกับ environment variable `ADMIN_PASSWORD`
 - **Data Privacy:** รูปสลิปจะถูกเก็บชั่วคราวและลบออกอัตโนมัติเมื่อมีการ Deploy ใหม่ (Ephemeral Storage)

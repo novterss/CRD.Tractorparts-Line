@@ -21,8 +21,8 @@ This document explains the end-to-end user journey, from initial greeting to fin
 - The user **uploads a slip image** into the chat.
 - The bot acknowledges receipt and **sends a Push Notification to the Admin**.
 - The Admin can log in via two channels:
-  - Channel 1: Type `/admin fatmonkey` in chat to approve directly in LINE.
-  - Channel 2: Open the Web Admin Dashboard (PIN: `fatmonkey`) to view the slip and approve.
+  - Channel 1: Type `/admin <ADMIN_PASSWORD>` in chat to approve directly in LINE.
+  - Channel 2: Open the Web Admin Dashboard (PIN = `ADMIN_PASSWORD`) to view the slip and approve.
 - Upon approval, **the user automatically earns VIP points (100 THB = 1 Point)**.
 - The user can type `เช็คแต้ม` (Check Points) to view their BRONZE/SILVER/GOLD VIP card.
 
